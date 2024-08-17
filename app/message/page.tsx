@@ -10,6 +10,7 @@ import {
   Box,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { useUser } from '../context/UserContext'; // Import the useUser hook
 
 // Define the component
 const QueryInput: React.FC = () => {
@@ -18,6 +19,8 @@ const QueryInput: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [response, setResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const { userId } = useUser(); // Get the userId from the UserContext
 
   // Handle input change event
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,8 +37,8 @@ const QueryInput: React.FC = () => {
     console.log("Submitting query:", inputText);
 
     try {
-      // Make API request
-      const res = await fetch("/api/message", {
+      // Step 1: Call the /api/message endpoint
+      const messageRes = await fetch("/api/message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -43,19 +46,41 @@ const QueryInput: React.FC = () => {
         body: JSON.stringify({ text: inputText }),
       });
 
-      console.log("API response status:", res.status);
+      console.log("API /message response status:", messageRes.status);
 
-      // Check if the response is OK
-      if (!res.ok) {
-        throw new Error("Failed to query the API");
+      if (!messageRes.ok) {
+        throw new Error("Failed to query the /api/message endpoint");
       }
 
-      // Parse the JSON response
-      const result = await res.json();
-      console.log("API response data:", result);
+      const messageResult = await messageRes.json();
+      console.log("API /message response data:", messageResult);
+
+      // Step 2: Use the output from /api/message and include the userId for /api/query
+      const queryRes = await fetch("/api/query", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: userId,                    // Add the userId
+          complaint: messageResult.complaint,
+          summary: messageResult.summary,
+          product: messageResult.product,
+          subProduct: messageResult.subProduct,
+        }),
+      });
+
+      console.log("API /query response status:", queryRes.status);
+
+      if (!queryRes.ok) {
+        throw new Error("Failed to submit the query to the database");
+      }
+
+      const queryResult = await queryRes.json();
+      console.log("API /query response data:", queryResult);
 
       // Stringify the JSON object for display
-      const formattedResponse = JSON.stringify(result, null, 2)
+      const formattedResponse = JSON.stringify(queryResult, null, 2)
         .replace(/\n/g, '<br/>')
         .replace(/  /g, '&nbsp;&nbsp;');
       

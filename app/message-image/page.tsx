@@ -10,6 +10,7 @@ import {
   Box,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { useUser } from '../context/UserContext'; // Import the useUser hook
 
 const MessageImage: React.FC = () => {
   const [inputText, setInputText] = useState<string>('');
@@ -17,6 +18,8 @@ const MessageImage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [response, setResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const { userId } = useUser(); // Get the userId from the UserContext
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputText(event.target.value);
@@ -34,7 +37,7 @@ const MessageImage: React.FC = () => {
     setError(null);
 
     try {
-      // First, classify the image content
+      // Step 1: Classify the image content
       const formData = new FormData();
       if (imageFile) {
         formData.append('file', imageFile);
@@ -52,7 +55,7 @@ const MessageImage: React.FC = () => {
       const imageResult = await imageResponse.json();
       const imageDescription = imageResult.description;
 
-      // Now submit the text along with the image description for further analysis
+      // Step 2: Submit the text along with the image description for further analysis
       const messageFormData = new FormData();
       messageFormData.append('text', `${inputText} Image Description: ${imageDescription}`);
       if (imageFile) {
@@ -68,9 +71,32 @@ const MessageImage: React.FC = () => {
         throw new Error('Failed to query the API');
       }
 
-      const result = await messageResponse.json();
-      console.log('API response data:', result);
-      setResponse(JSON.stringify(result, null, 2));
+      const messageResult = await messageResponse.json();
+      console.log('API response data:', messageResult);
+
+      // Step 3: Submit the result to the /api/query endpoint with the userId
+      const queryRes = await fetch('/api/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,                    // Add the userId
+          complaint: messageResult.complaint,
+          summary: messageResult.summary,
+          product: messageResult.product,
+          subProduct: messageResult.subProduct,
+        }),
+      });
+
+      if (!queryRes.ok) {
+        throw new Error('Failed to submit the query to the database');
+      }
+
+      const queryResult = await queryRes.json();
+      console.log('API /query response data:', queryResult);
+
+      setResponse(JSON.stringify(queryResult, null, 2)); // Set the formatted response to the state
     } catch (err) {
       setError('An error occurred while processing the request.');
     } finally {
