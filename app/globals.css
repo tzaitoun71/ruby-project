@@ -3,7 +3,7 @@
 html, body {
   height: 100%;
   margin: 0;
-  background-color: #fff;
+  background-color: #0e312d;
   font-family: 'Roboto', sans-serif; /* Apply the Roboto font */
   overflow-x: hidden; /* Prevent horizontal scrolling */
 }
