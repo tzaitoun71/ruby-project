@@ -21,6 +21,7 @@
     "@mui/icons-material": "^5.16.7",
     "@mui/material": "^5.16.7",
     "@pinecone-database/pinecone": "^3.0.0",
+    "@types/axios": "^0.14.0",
     "@vercel/postgres": "^0.9.0",
     "assemblyai": "^4.6.1",
     "audio-recorder-polyfill": "^0.4.1",

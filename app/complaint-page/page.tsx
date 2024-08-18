@@ -5,6 +5,7 @@ import { Button, Box } from '@mui/material';
 import QueryInputModal from '../components/QueryInputModal';
 import MessageImageModal from '../components/MessageImageModal';
 import VoiceUploadModal from '../components/VoiceUploadModal';
+import UploadVideoModal from '../components/UploadVideoModal'; 
 
 const Home = () => {
   // State management for the QueryInput modal
@@ -34,9 +35,17 @@ const Home = () => {
     setVoiceModalOpen(false);
   };
 
+  // State management for the UploadVideo modal
+  const [isVideoModalOpen, setVideoModalOpen] = useState(false);
+  const handleOpenVideoModal = () => {
+    setVideoModalOpen(true);
+  };
+  const handleCloseVideoModal = () => {
+    setVideoModalOpen(false);
+  };
+
   return (
     <div>
-
       {/* Button to open the QueryInput modal */}
       <Box mt={2}>
         <Button variant="contained" color="primary" onClick={handleOpenQueryModal}>
@@ -58,6 +67,13 @@ const Home = () => {
         </Button>
       </Box>
 
+      {/* Button to open the UploadVideo modal */}
+      <Box mt={2}>
+        <Button variant="contained" color="primary" onClick={handleOpenVideoModal}>
+          Open Video Upload Modal
+        </Button>
+      </Box>
+
       {/* QueryInputModal */}
       <QueryInputModal open={isQueryModalOpen} onClose={handleCloseQueryModal} />
 
@@ -66,6 +82,9 @@ const Home = () => {
 
       {/* VoiceUploadModal */}
       <VoiceUploadModal open={isVoiceModalOpen} onClose={handleCloseVoiceModal} />
+
+      {/* UploadVideoModal */}
+      <UploadVideoModal open={isVideoModalOpen} onClose={handleCloseVideoModal} />
     </div>
   );
 };
