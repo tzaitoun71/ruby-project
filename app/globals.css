@@ -1,10 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
 html, body {
   height: 100%;
   margin: 0;
   background-color: #0e312d;
-  font-family: 'Roboto', sans-serif; /* Apply the Roboto font */
+  font-family: 'Inter, "Inter Placeholder", sans-serif'; 
   overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
