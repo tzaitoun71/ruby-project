@@ -68,7 +68,9 @@ const streamToBlob = async (stream: ReadableStream<Uint8Array>): Promise<Blob> =
     done = readerDone;
   }
 
-  return new Blob(chunks, { type: 'audio/wav' }); // Adjust the type as per your audio format
+  const blob = new Blob(chunks, { type: 'audio/wav' });
+  console.log("Blob size:", blob.size);
+  return blob;
 };
 
 export const POST = async (req: NextRequest) => {
@@ -142,8 +144,8 @@ export const POST = async (req: NextRequest) => {
       product: product || null,
       subProduct: subProduct || null,
     });
-  } catch (error) {
-    console.error("Error processing query:", error);
+  } catch (error : any) {
+    console.error("Error processing query:", error.message, error.stack);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 };
