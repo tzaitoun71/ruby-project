@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState, useRef } from "react";
 import {
@@ -8,95 +8,60 @@ import {
   Container,
   Box,
 } from "@mui/material";
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile } from '@ffmpeg/util';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { useUser } from '../context/UserContext'; 
+import { useUser } from '../context/UserContext';
 
-const ffmpeg = new FFmpeg();
+declare global {
+  interface Window {
+    webkitSpeechRecognition: any;
+  }
+}
 
 const VoiceUpload: React.FC = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [recording, setRecording] = useState<boolean>(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [response, setResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [transcript, setTranscript] = useState<string>("");
+  const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const { userId } = useUser(); 
+  const { userId } = useUser();
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       console.log("File selected:", file.name);
-
-      if (file.type === 'audio/wav') {
-        const mp3File = await convertToMp3(file);
-        setAudioFile(mp3File);
-      } else {
-        setAudioFile(file);
-      }
+      setAudioFile(file);
     }
   };
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+  const startRecording = () => {
+    setRecording(true);
+    recognitionRef.current = new window.webkitSpeechRecognition();
+    recognitionRef.current.continuous = true;
+    recognitionRef.current.interimResults = true;
 
-      recorder.ondataavailable = async (event) => {
-        const recordedBlob = new Blob([event.data], { type: "audio/wav" });
-        const mp3File = await convertToMp3(new File([recordedBlob], "recording.wav", { type: "audio/wav" }));
-        setAudioFile(mp3File);
+    recognitionRef.current.onresult = (event: any) => {
+      const { transcript } = event.results[event.results.length - 1][0];
+      setTranscript(transcript);
+    };
 
-        if (audioRef.current) {
-          audioRef.current.src = URL.createObjectURL(mp3File);
-          audioRef.current.play();
-        }
-      };
-
-      recorder.onstop = () => {
-        setRecording(false);
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      recorder.start();
-      setMediaRecorder(recorder);
-      setRecording(true);
-    } catch (err) {
-      console.error("Error starting recording:", err);
-      setError("Failed to start recording.");
-    }
+    recognitionRef.current.start();
   };
 
   const stopRecording = () => {
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-      setMediaRecorder(null);
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
       setRecording(false);
     }
   };
 
-  const convertToMp3 = async (wavFile: File): Promise<File> => {
-    if (!ffmpeg.loaded) {
-        await ffmpeg.load();
-    }
-
-    await ffmpeg.writeFile('input.wav', await fetchFile(wavFile));
-    await ffmpeg.exec(['-i', 'input.wav', 'output.mp3']);
-    const data = await ffmpeg.readFile('output.mp3');
-
-    const mp3Blob = new Blob([data], { type: 'audio/mp3' });
-    return new File([mp3Blob], "recording.mp3", { type: "audio/mp3" });
-  };
-
-  const handleSubmit = async () => {
+  const handleFileSubmit = async () => {
     setLoading(true);
     setResponse(null);
     setError(null);
-
-    console.log("Submitting audio file:", audioFile?.name);
 
     try {
       if (!audioFile) {
@@ -114,20 +79,20 @@ const VoiceUpload: React.FC = () => {
       console.log("API response status:", res.status);
 
       if (!res.ok) {
-        throw new Error("Failed to query the API");
+        throw new Error("Failed to process the audio file.");
       }
 
       const result = await res.json();
       console.log("API response data:", result);
 
-      // Now, send the transcription result to the database with userId
+      // Send the result along with userId to the database
       const queryRes = await fetch('/api/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: userId, // Add the userId from the context
+          userId, // Add the userId from the context
           complaint: result.complaint,
           summary: result.summary,
           product: result.product,
@@ -142,14 +107,71 @@ const VoiceUpload: React.FC = () => {
       const queryResult = await queryRes.json();
       console.log('API /query response data:', queryResult);
 
-      const formattedResponse = JSON.stringify(queryResult, null, 2)
-        .replace(/\n/g, '<br/>')
-        .replace(/  /g, '&nbsp;&nbsp;');
-
-      setResponse(formattedResponse);
+      setResponse(JSON.stringify(queryResult, null, 2));
     } catch (err) {
       console.error("Error occurred:", err);
-      setError("An error occurred while querying the API.");
+      setError("An error occurred while processing the audio file.");
+    } finally {
+      setLoading(false);
+      console.log("Loading complete");
+    }
+  };
+
+  const handleTextSubmit = async () => {
+    setLoading(true);
+    setResponse(null);
+    setError(null);
+
+    try {
+      if (!transcript) {
+        throw new Error("No transcript available.");
+      }
+
+      const res = await fetch("/api/message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: transcript,
+        }),
+      });
+
+      console.log("API response status:", res.status);
+
+      if (!res.ok) {
+        throw new Error("Failed to process the text.");
+      }
+
+      const result = await res.json();
+      console.log("API response data:", result);
+
+      // Send the result along with userId to the database
+      const queryRes = await fetch('/api/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId, // Add the userId from the context
+          complaint: result.complaint,
+          summary: result.summary,
+          product: result.product,
+          subProduct: result.subProduct,
+        }),
+      });
+
+      if (!queryRes.ok) {
+        throw new Error('Failed to submit the query to the database');
+      }
+
+      const queryResult = await queryRes.json();
+      console.log('API /query response data:', queryResult);
+
+      setResponse(JSON.stringify(queryResult, null, 2));
+    } catch (err) {
+      console.error("Error occurred:", err);
+      setError("An error occurred while processing the text.");
     } finally {
       setLoading(false);
       console.log("Loading complete");
@@ -191,18 +213,6 @@ const VoiceUpload: React.FC = () => {
             Record or Upload Voice File
           </Typography>
 
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={recording ? stopRecording : startRecording}
-            fullWidth
-            sx={{ mt: 2, backgroundColor: recording ? "#E57373" : "#A6AD91" }}
-          >
-            {recording ? "Stop Recording" : "Start Recording"}
-          </Button>
-
-          <audio ref={audioRef} controls style={{ marginTop: "20px", display: audioFile ? "block" : "none" }} />
-
           <input
             type="file"
             accept="audio/*"
@@ -213,7 +223,7 @@ const VoiceUpload: React.FC = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={handleSubmit}
+            onClick={handleFileSubmit}
             disabled={loading || !audioFile}
             fullWidth
             sx={{
@@ -227,7 +237,48 @@ const VoiceUpload: React.FC = () => {
               color: "#ffffff",
             }}
           >
-            {loading ? <CircularProgress size={24} /> : "Submit"}
+            {loading ? <CircularProgress size={24} /> : "Submit Audio"}
+          </Button>
+
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={recording ? stopRecording : startRecording}
+            fullWidth
+            sx={{ mt: 2, backgroundColor: recording ? "#E57373" : "#A6AD91" }}
+          >
+            {recording ? "Stop Recording" : "Start Recording"}
+          </Button>
+
+          {transcript && (
+            <Box mt={4} p={2} bgcolor="background.default" borderRadius={1}>
+              <Typography variant="h6" gutterBottom>
+                Transcript:
+              </Typography>
+              <Typography variant="body1" color="textSecondary">
+                {transcript}
+              </Typography>
+            </Box>
+          )}
+
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleTextSubmit}
+            disabled={loading || !transcript}
+            fullWidth
+            sx={{
+              mt: 2,
+              backgroundColor: "#A6AD91",
+              "&:hover": {
+                backgroundColor: "#8E9C7C",
+              },
+              borderRadius: 1,
+              fontWeight: "bold",
+              color: "#ffffff",
+            }}
+          >
+            {loading ? <CircularProgress size={24} /> : "Submit Text"}
           </Button>
 
           {response && (
