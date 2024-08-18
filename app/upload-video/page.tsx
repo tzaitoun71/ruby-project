@@ -9,12 +9,15 @@ import {
   Box,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { useUser } from '../context/UserContext';
 
 const UploadVideo: React.FC = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const { userId } = useUser();
 
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -42,8 +45,38 @@ const UploadVideo: React.FC = () => {
         throw new Error('Failed to upload and analyze the video');
       }
 
-      const result = await res.json();
-      setResponse(JSON.stringify(result, null, 2)); // Display the JSON result
+      let result = await res.json();
+
+      // Rename "is_complaint" to "complaint"
+      if (result.is_complaint !== undefined) {
+        result.complaint = result.is_complaint;
+        delete result.is_complaint;
+      }
+
+      setResponse(JSON.stringify(result, null, 2));
+
+      // Send the modified result to the database with the userId
+      const queryRes = await fetch('/api/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          complaint: result.complaint,
+          summary: result.summary,
+          product: result.product,
+          subProduct: result.sub_product,
+        }),
+      });
+
+      if (!queryRes.ok) {
+        throw new Error('Failed to submit the query to the database');
+      }
+
+      const queryResult = await queryRes.json();
+      console.log('API /query response data:', queryResult);
+
     } catch (err) {
       setError('An error occurred while uploading the video.');
     } finally {
