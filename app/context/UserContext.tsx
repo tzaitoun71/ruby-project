@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -7,7 +7,8 @@ import { useRouter } from 'next/navigation';
 
 interface UserContextProps {
   user: User | null;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>; // Add setUser to the interface
+  userId: string | null; // Add userId to the context
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   signOut: () => void;
 }
 
@@ -52,7 +53,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, signOut }}>
+    <UserContext.Provider value={{ user, userId: user?.uid || null, setUser, signOut }}>
       {children}
     </UserContext.Provider>
   );
