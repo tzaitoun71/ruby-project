@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Typography, Button, CircularProgress, Box, Card, CardContent, CardActions } from '@mui/material';
+import { Typography, Button, CircularProgress, Box, CardContent, CardActions } from '@mui/material';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../config/Firebase';
 import { useUser } from '../context/UserContext';
@@ -48,11 +48,14 @@ const LoginPage: React.FC = () => {
       alignItems="center"
       height="100vh"
       sx={{
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         overflow: 'hidden',
       }}
     >
       <Box
         sx={{
+          backgroundImage: 'url("/bg.png")',
           width: '100%',
           maxWidth: 400,
           padding: 3,
@@ -62,6 +65,7 @@ const LoginPage: React.FC = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
+          marginTop: '-10%', // Adjust this value to move the box upwards
         }}
       >
         <CardContent>
@@ -69,7 +73,6 @@ const LoginPage: React.FC = () => {
             Ruby
           </Typography>
           <Typography variant="h6" gutterBottom textAlign="center">
-            
           </Typography>
           <Box textAlign="center" marginTop={2}>
             {user ? (
@@ -99,10 +102,10 @@ const LoginPage: React.FC = () => {
               onClick={handleLogin}
               startIcon={<GoogleIcon />}
               sx={{
-                backgroundColor: '#0056A3',
+                backgroundColor: 'black',
                 color: '#fff',
                 '&:hover': {
-                  backgroundColor: '#004494',
+                  backgroundColor: '#333333',
                 },
                 padding: '10px 20px',
                 borderRadius: '25px',
