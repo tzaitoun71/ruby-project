@@ -9,15 +9,12 @@ import {
   Box,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { useUser } from '../context/UserContext';
 
 const UploadVideo: React.FC = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const { userId } = useUser(); // Get the userId from the UserContext
 
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -47,26 +44,6 @@ const UploadVideo: React.FC = () => {
 
       const result = await res.json();
       setResponse(JSON.stringify(result, null, 2)); // Display the JSON result
-
-      // Send the result along with userId to the database
-      const queryRes = await fetch('/api/query', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId, // Add the userId from the context
-          videoAnalysisResult: result, // Send the result from the video analysis
-        }),
-      });
-
-      if (!queryRes.ok) {
-        throw new Error('Failed to submit the query to the database');
-      }
-
-      const queryResult = await queryRes.json();
-      console.log('API /query response data:', queryResult);
-
     } catch (err) {
       setError('An error occurred while uploading the video.');
     } finally {
