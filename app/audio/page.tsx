@@ -11,6 +11,7 @@ import {
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { useUser } from '../context/UserContext'; 
 
 const ffmpeg = new FFmpeg();
 
@@ -22,6 +23,8 @@ const VoiceUpload: React.FC = () => {
   const [response, setResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const { userId } = useUser(); 
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -117,7 +120,29 @@ const VoiceUpload: React.FC = () => {
       const result = await res.json();
       console.log("API response data:", result);
 
-      const formattedResponse = JSON.stringify(result, null, 2)
+      // Now, send the transcription result to the database with userId
+      const queryRes = await fetch('/api/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId, // Add the userId from the context
+          complaint: result.complaint,
+          summary: result.summary,
+          product: result.product,
+          subProduct: result.subProduct,
+        }),
+      });
+
+      if (!queryRes.ok) {
+        throw new Error('Failed to submit the query to the database');
+      }
+
+      const queryResult = await queryRes.json();
+      console.log('API /query response data:', queryResult);
+
+      const formattedResponse = JSON.stringify(queryResult, null, 2)
         .replace(/\n/g, '<br/>')
         .replace(/  /g, '&nbsp;&nbsp;');
 
