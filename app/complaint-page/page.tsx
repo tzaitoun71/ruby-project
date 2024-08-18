@@ -6,6 +6,7 @@ import { QueryStats, Image, Mic, Videocam } from '@mui/icons-material';
 import QueryInputModal from '../components/QueryInputModal';
 import MessageImageModal from '../components/MessageImageModal';
 import VoiceUploadModal from '../components/VoiceUploadModal';
+import UploadVideoModal from '../components/UploadVideoModal'; 
 
 const Home = () => {
   const [isQueryModalOpen, setQueryModalOpen] = useState(false);
@@ -119,7 +120,9 @@ const Home = () => {
       <QueryInputModal open={isQueryModalOpen} onClose={handleCloseQueryModal} />
       <MessageImageModal open={isMessageModalOpen} onClose={handleCloseMessageModal} />
       <VoiceUploadModal open={isVoiceModalOpen} onClose={handleCloseVoiceModal} />
-      {/* Placeholder for VideoProcessingModal */}
+
+      {/* UploadVideoModal */}
+      <UploadVideoModal open={isVideoModalOpen} onClose={handleCloseVideoModal} />
     </Container>
   );
 };

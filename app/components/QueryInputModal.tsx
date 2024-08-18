@@ -78,6 +78,18 @@ const QueryInputModal: React.FC<QueryInputModalProps> = ({ open, onClose }) => {
     }
   };
 
+  const resetState = () => {
+    setInputText("");
+    setLoading(false);
+    setSuccess(false);
+    setError(null);
+  };
+
+  const handleClose = () => {
+    resetState();
+    onClose();
+  };
+
   const theme = createTheme({
     palette: {
       primary: { main: "#5D675B" },
@@ -94,79 +106,84 @@ const QueryInputModal: React.FC<QueryInputModalProps> = ({ open, onClose }) => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Modal open={open} onClose={onClose}>
-        <Box 
-          display="flex" 
-          justifyContent="center" 
-          alignItems="center" 
-          height="100vh"
+      <Modal
+        open={open}
+        onClose={handleClose} // Use handleClose to reset the state when closing
+        BackdropProps={{
+          onClick: handleClose, // Close modal when clicking outside
+        }}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            p: 4, 
+            borderRadius: 2, 
+            width: '350px',
+            bgcolor: "#f8f8f8",
+            outline: 'none',
+          }}
+          onClick={(e) => e.stopPropagation()} // Prevent clicks inside the modal from closing it
         >
-          <Paper 
-            elevation={3} 
-            sx={{ 
-              p: 4, 
-              borderRadius: 2, 
-              width: '350px',
-              bgcolor: "#f8f8f8",
-            }}
-          >
-            {!success ? (
-              <>
-                <Typography variant="h4" gutterBottom align="center">
-                  Query API
-                </Typography>
-                <TextField
-                  label="Enter your query"
-                  variant="outlined"
-                  fullWidth
-                  value={inputText}
-                  onChange={handleInputChange}
-                  multiline
-                  rows={4}
-                  margin="normal"
-                  sx={{
-                    backgroundColor: "#ffffff",
-                    borderRadius: 1,
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleSubmit}
-                  disabled={loading || inputText.trim() === ""}
-                  fullWidth
-                  sx={{
-                    mt: 2,
-                    backgroundColor: "#A6AD91",
-                    "&:hover": { backgroundColor: "#8E9C7C" },
-                    borderRadius: 1,
-                    fontWeight: "bold",
-                    color: "#ffffff",
-                  }}
-                >
-                  {loading ? <CircularProgress size={24} /> : "Submit"}
-                </Button>
-              </>
-            ) : (
-              <Box display="flex" flexDirection="column" alignItems="center">
-                <CheckCircleIcon color="primary" sx={{ fontSize: 60 }} />
-                <Typography variant="h6" align="center" sx={{ mt: 2 }}>
-                  Your inquiry has been sent to the team.
-                </Typography>
-              </Box>
-            )}
-            {error && (
-              <Box mt={4} p={2} bgcolor="background.paper" borderRadius={1}>
-                <Typography variant="h6" gutterBottom color="error">
-                  Error:
-                </Typography>
-                <Typography variant="body1" color="textSecondary">
-                  {error}
-                </Typography>
-              </Box>
-            )}
-          </Paper>
-        </Box>
+          {!success ? (
+            <>
+              <Typography variant="h4" gutterBottom align="center">
+                Submit Text
+              </Typography>
+              <TextField
+                label="Enter your text"
+                variant="outlined"
+                fullWidth
+                value={inputText}
+                onChange={handleInputChange}
+                multiline
+                rows={4}
+                margin="normal"
+                sx={{
+                  backgroundColor: "#ffffff",
+                  borderRadius: 2,
+                  mb: 3,
+                }}
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSubmit}
+                disabled={loading || inputText.trim() === ""}
+                fullWidth
+                sx={{
+                  backgroundColor: "#A6AD91", // Lighter color consistent with other modals
+                  "&:hover": { backgroundColor: "#8E9C7C" },
+                  borderRadius: 2,
+                  fontWeight: "bold",
+                  color: "#ffffff",
+                  textTransform: "none",
+                  padding: "10px 12px",
+                  boxShadow: "0px 3px 5px rgba(0, 0, 0, 0.2)",
+                }}
+              >
+                {loading ? <CircularProgress size={24} /> : "Submit"}
+              </Button>
+            </>
+          ) : (
+            <Box display="flex" flexDirection="column" alignItems="center">
+              <CheckCircleIcon color="primary" sx={{ fontSize: 60 }} />
+              <Typography variant="h6" align="center" sx={{ mt: 2 }}>
+                Your inquiry has been sent to the team.
+              </Typography>
+            </Box>
+          )}
+          {error && (
+            <Box mt={4} p={2} bgcolor="background.paper" borderRadius={2}>
+              <Typography variant="h6" gutterBottom color="error">
+                Error:
+              </Typography>
+              <Typography variant="body1" color="textSecondary">
+                {error}
+              </Typography>
+            </Box>
+          )}
+        </Paper>
       </Modal>
     </ThemeProvider>
   );

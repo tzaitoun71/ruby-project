@@ -12,6 +12,11 @@ import {
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useUser } from '../context/UserContext';
+import MicIcon from '@mui/icons-material/Mic';
+import StopIcon from '@mui/icons-material/Stop';
+import AudiotrackIcon from '@mui/icons-material/Audiotrack';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorIcon from '@mui/icons-material/Error';
 
 declare global {
   interface Window {
@@ -31,6 +36,7 @@ const VoiceUploadModal: React.FC<VoiceUploadModalProps> = ({ open, onClose }) =>
   const [response, setResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<string>("");
+  const [submitted, setSubmitted] = useState<boolean>(false); // For handling submission state
   const recognitionRef = useRef<any>(null);
 
   const { userId } = useUser();
@@ -131,12 +137,23 @@ const VoiceUploadModal: React.FC<VoiceUploadModalProps> = ({ open, onClose }) =>
       }
 
       setResponse("Your inquiry has been sent to the team.");
+      setSubmitted(true); // Set submission state to true
     } catch (err) {
       console.error("Error occurred:", err);
       setError("An error occurred while processing the request.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetState = () => {
+    setAudioFile(null);
+    setTranscript("");
+    setRecording(false);
+    setLoading(false);
+    setResponse(null);
+    setError(null);
+    setSubmitted(false);
   };
 
   const theme = createTheme({
@@ -168,28 +185,73 @@ const VoiceUploadModal: React.FC<VoiceUploadModalProps> = ({ open, onClose }) =>
 
   return (
     <ThemeProvider theme={theme}>
-      <Modal open={open} onClose={onClose}>
-        <Container maxWidth="sm">
-          <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100vh">
-            <Paper elevation={3} sx={{ p: 4, borderRadius: 2, width: '350px', bgcolor: "#f8f8f8" }}>
-              <Typography variant="h4" gutterBottom>
+      <Modal
+        open={open}
+        onClose={() => {
+          resetState();
+          onClose();
+        }}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
+        <Paper
+          elevation={3}
+          sx={{ p: 4, borderRadius: 2, width: '350px', bgcolor: "#f8f8f8" }}
+          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+        >
+          {!submitted ? (
+            <>
+              <Typography variant="h4" gutterBottom sx={{ textAlign: 'center' }}>
                 Record or Upload Voice File
               </Typography>
 
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={handleFileChange}
-                style={{ margin: "20px 0" }}
-              />
+              <Button
+                variant="contained"
+                component="label"
+                fullWidth
+                sx={{
+                  mt: 2,
+                  backgroundColor: '#A6AD91',
+                  '&:hover': {
+                    backgroundColor: '#8E9C7C',
+                  },
+                  borderRadius: 2,
+                  fontWeight: 'bold',
+                  color: '#ffffff',
+                  textTransform: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1, // Spacing between icon and text
+                  padding: '10px 12px',
+                }}
+              >
+                <AudiotrackIcon />
+                {audioFile ? audioFile.name : 'Upload Audio'}
+                <input type="file" hidden accept="audio/*" onChange={handleFileChange} />
+              </Button>
 
               <Button
                 variant="contained"
                 color="secondary"
                 onClick={recording ? stopRecording : startRecording}
                 fullWidth
-                sx={{ mt: 2, backgroundColor: recording ? "#E57373" : "#A6AD91" }}
+                sx={{
+                  mt: 2,
+                  backgroundColor: recording ? "#E57373" : "#A6AD91",
+                  '&:hover': {
+                    backgroundColor: recording ? "#d32f2f" : "#8E9C7C",
+                  },
+                  borderRadius: 2,
+                  fontWeight: 'bold',
+                  color: '#ffffff',
+                  textTransform: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1,
+                }}
               >
+                {recording ? <StopIcon /> : <MicIcon />}
                 {recording ? "Stop Recording" : "Start Recording"}
               </Button>
 
@@ -213,27 +275,24 @@ const VoiceUploadModal: React.FC<VoiceUploadModalProps> = ({ open, onClose }) =>
                 {loading ? <CircularProgress size={24} /> : "Submit"}
               </Button>
 
-              {response && (
-                <Box mt={4} p={2} bgcolor="background.default" borderRadius={1}>
-                  <Typography variant="h6" gutterBottom>
-                    {response}
-                  </Typography>
-                </Box>
-              )}
-
               {error && (
-                <Box mt={4} p={2} bgcolor="background.default" borderRadius={1}>
-                  <Typography variant="h6" gutterBottom color="error">
-                    Error:
-                  </Typography>
+                <Box mt={4} p={2} bgcolor="background.default" borderRadius={1} display="flex" alignItems="center">
+                  <ErrorIcon color="error" sx={{ mr: 1 }} />
                   <Typography variant="body1" color="textSecondary">
                     {error}
                   </Typography>
                 </Box>
               )}
-            </Paper>
-          </Box>
-        </Container>
+            </>
+          ) : (
+            <Box display="flex" flexDirection="column" alignItems="center">
+              <CheckCircleIcon color="primary" sx={{ fontSize: 60 }} />
+              <Typography variant="h6" align="center" sx={{ mt: 2 }}>
+                Your inquiry has been sent to the team.
+              </Typography>
+            </Box>
+          )}
+        </Paper>
       </Modal>
     </ThemeProvider>
   );
