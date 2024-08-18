@@ -1,12 +1,19 @@
-'use client';
+"use client";
 
-import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Typography, Button, CircularProgress, Box, CardContent, CardActions } from '@mui/material';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../config/Firebase';
-import { useUser } from '../context/UserContext';
-import GoogleIcon from '@mui/icons-material/Google';
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Typography,
+  Button,
+  CircularProgress,
+  Box,
+  CardContent,
+  CardActions,
+} from "@mui/material";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth } from "../config/Firebase";
+import { useUser } from "../context/UserContext";
+import GoogleIcon from "@mui/icons-material/Google";
 
 const provider = new GoogleAuthProvider();
 
@@ -20,22 +27,27 @@ const LoginPage: React.FC = () => {
       setUser(result.user);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error('Error signing in with Google:', error.message);
+        console.error("Error signing in with Google:", error.message);
       } else {
-        console.error('Unknown error signing in with Google:', error);
+        console.error("Unknown error signing in with Google:", error);
       }
     }
   };
 
   useEffect(() => {
     if (user) {
-      router.push('/landing-page');
+      router.push("/landing-page");
     }
   }, [user, router]);
 
   if (user === undefined) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -48,50 +60,38 @@ const LoginPage: React.FC = () => {
       alignItems="center"
       height="100vh"
       sx={{
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        overflow: 'hidden',
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        overflow: "hidden",
       }}
     >
       <Box
         sx={{
           backgroundImage: 'url("/bg.png")',
-          width: '100%',
+          width: "100%",
           maxWidth: 400,
           padding: 3,
           boxShadow: 3,
           borderRadius: 2,
-          backgroundColor: 'white',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          marginTop: '-10%', // Adjust this value to move the box upwards
+          backgroundColor: "white",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          marginTop: "-10%", // Adjust this value to move the box upwards
         }}
       >
         <CardContent>
           <Typography variant="h4" gutterBottom textAlign="center">
             Ruby
           </Typography>
-          <Typography variant="h6" gutterBottom textAlign="center">
-          </Typography>
+          <Typography variant="h6" gutterBottom textAlign="center"></Typography>
           <Box textAlign="center" marginTop={2}>
-            {user ? (
-              <>
-                <Typography variant="body1" gutterBottom>
-                  Welcome, {user.displayName}
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  You are logged in as {user.email}
-                </Typography>
-              </>
-            ) : (
-              <Typography variant="body1" gutterBottom>
-                Please sign in to continue.
-              </Typography>
-            )}
+            <Typography variant="body1" gutterBottom>
+              Please sign in to continue.
+            </Typography>
           </Box>
         </CardContent>
-        <CardActions sx={{ justifyContent: 'center', width: '100%' }}>
+        <CardActions sx={{ justifyContent: "center", width: "100%" }}>
           {user ? (
             <Button variant="contained" color="secondary" onClick={signOut}>
               Logout
@@ -102,15 +102,15 @@ const LoginPage: React.FC = () => {
               onClick={handleLogin}
               startIcon={<GoogleIcon />}
               sx={{
-                backgroundColor: 'black',
-                color: '#fff',
-                '&:hover': {
-                  backgroundColor: '#333333',
+                backgroundColor: "black",
+                color: "#fff",
+                "&:hover": {
+                  backgroundColor: "#333333",
                 },
-                padding: '10px 20px',
-                borderRadius: '25px',
-                fontWeight: 'bold',
-                width: '100%',
+                padding: "10px 20px",
+                borderRadius: "25px",
+                fontWeight: "bold",
+                width: "100%",
               }}
             >
               Login with Google
