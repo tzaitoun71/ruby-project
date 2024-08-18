@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { VideoIntelligenceServiceClient } from '@google-cloud/video-intelligence';
-import fs from 'fs';
-import path from 'path';
 import { Pinecone } from "@pinecone-database/pinecone";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore, PineconeTranslator } from "@langchain/pinecone";
@@ -9,7 +7,6 @@ import { ChatOpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 
-// Setup function for Pinecone, embeddings, and LLM
 const setupPineconeLangchain = async () => {
   const pinecone = new Pinecone({
     apiKey: process.env.PINECONE_API_KEY as string,
@@ -41,14 +38,6 @@ const setupPineconeLangchain = async () => {
   return { selfQueryRetriever, llm };
 };
 
-const credentials = {
-  projectId: process.env.GOOGLE_PROJECT_ID,
-  credentials: {
-    private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'), // Handle newline characters in the private key
-    client_email: process.env.GOOGLE_CLIENT_EMAIL,
-  },
-};
-
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -58,17 +47,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'File is required' }, { status: 400 });
     }
 
-    const filePath = path.join('/tmp', file.name);
-    await fs.promises.writeFile(filePath, Buffer.from(await file.arrayBuffer()));
-
-    const client = new VideoIntelligenceServiceClient({
-      projectId: credentials.projectId,
-      credentials: credentials.credentials,
-    });
-
-    const videoBuffer = fs.readFileSync(filePath);
+    // Read the file into memory as a buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const videoBuffer = Buffer.from(arrayBuffer);
     const inputContent = videoBuffer.toString('base64');
 
+    // Initialize the Video Intelligence API client
+    const client = new VideoIntelligenceServiceClient({
+      projectId: process.env.GOOGLE_PROJECT_ID,
+      credentials: {
+        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        client_email: process.env.GOOGLE_CLIENT_EMAIL,
+      },
+    });
+    
+
+    // Request the video analysis (this starts the asynchronous operation)
     const [operation] = await client.annotateVideo({
       inputContent,
       features: [7, 1, 6],
@@ -80,22 +74,27 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Wait for the operation to complete and get the result
     const [operationResult] = await operation.promise();
 
+    // Extract transcription
     const transcription = operationResult.annotationResults?.[0].speechTranscriptions
       ?.map((transcript) => transcript.alternatives?.[0].transcript)
       .join(' ') || '';
 
+    // Extract labels
     const labels = operationResult.annotationResults?.[0].segmentLabelAnnotations?.map((label) => label.entity?.description) || [];
 
+    // Extract text from video frames
     const detectedText = operationResult.annotationResults?.[0].textAnnotations?.map((text) => text.text).join(', ') || '';
 
-    await fs.promises.unlink(filePath);
-
+    // Combine the results into a single string for analysis by GPT-4o mini
     const analysisText = `Transcription: ${transcription}\nLabels: ${labels.join(', ')}\nDetected Text: ${detectedText}`;
 
+    // Setup Pinecone and Langchain
     const { llm } = await setupPineconeLangchain();
 
+    // Analyze the combined text using GPT-4o mini
     const analysisPrompt = `
 Analyze the following information extracted from a video and respond in the following JSON format:
 {
