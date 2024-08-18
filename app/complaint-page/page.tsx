@@ -1,11 +1,22 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button, Box, Grid, Tooltip, Typography, Paper, Container } from '@mui/material';
+import { Button, Box, Grid, Tooltip, Typography, Paper, Container, keyframes } from '@mui/material';
 import { QueryStats, Image, Mic, Videocam } from '@mui/icons-material';
 import QueryInputModal from '../components/QueryInputModal';
 import MessageImageModal from '../components/MessageImageModal';
 import VoiceUploadModal from '../components/VoiceUploadModal';
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 const Home = () => {
   const [isQueryModalOpen, setQueryModalOpen] = useState(false);
@@ -43,7 +54,17 @@ const Home = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ textAlign: 'center', mt: 8, backgroundColor: '#1A1A1A', padding: { xs: '20px', md: '50px' }, borderRadius: 2 }}>
+    <Container
+      maxWidth="lg"
+      sx={{
+        textAlign: 'center',
+        mt: 8,
+        backgroundColor: '#1A1A1A',
+        padding: { xs: '20px', md: '50px' },
+        borderRadius: 2,
+        animation: `${fadeIn} 1s ease-in-out`, 
+      }}
+    >
       <Typography variant="h4" gutterBottom sx={{ color: 'white' }}>
         Submit Your Complaints and Issues
       </Typography>
