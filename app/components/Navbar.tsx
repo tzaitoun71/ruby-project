@@ -3,9 +3,11 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { useRouter } from 'next/navigation';
+import { useUser } from '../context/UserContext'; 
 
 const Navbar: React.FC = () => {
   const router = useRouter();
+  const { signOut } = useUser(); 
 
   const handleFileComplaint = () => {
     router.push('/complaint-page');
@@ -42,18 +44,40 @@ const Navbar: React.FC = () => {
           </Typography>
         </Box>
 
-        <Button
-          variant="contained"
-          sx={{
-            backgroundColor: '#E9E3A6',
-            color: 'black',
-            fontWeight: 'bold',
-            marginRight: 25,
-            fontFamily: 'Inter, "Inter Placeholder", sans-serif',
-          }}
-        >
-          GET STARTED
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', marginRight: 25 }}>
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: 'white',
+              color: 'black',
+              fontWeight: 'bold',
+              fontFamily: 'Inter, "Inter Placeholder", sans-serif',
+              border: '2px solid #E9E3A6',
+              '&:hover': {
+                backgroundColor: '#f5f5f5',
+                borderColor: '#E9E3A6',
+              },
+              textTransform: 'none',
+              marginRight: 2,
+            }}
+            onClick={signOut} 
+          >
+            Log out
+          </Button>
+
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: '#E9E3A6',
+              color: 'black',
+              fontWeight: 'bold',
+              fontFamily: 'Inter, "Inter Placeholder", sans-serif',
+              textTransform: 'none',
+            }}
+          >
+            GET STARTED
+          </Button>
+        </Box>
       </Toolbar>
     </AppBar>
   );
