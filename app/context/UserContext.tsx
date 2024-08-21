@@ -24,7 +24,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(firebaseUser);
       } else {
         setUser(null);
-        router.push('/login'); // Redirect to sign-in page if not authenticated
+        router.push('/login'); 
       }
     });
 
